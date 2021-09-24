@@ -57,6 +57,7 @@ This assignment aims to validate elementary C# / Coding / Math / Unity3D knowled
     * The explanation of the mathematical concept can be seen and experimented [HERE](https://www.geogebra.org/m/upbPEhNK).
       * For the test simulation a small spinoff is used in the format:
       * `r = Sin(angle * A) + Cos(angle * B)`
+      * At the provided link you can try an example like `sin(5t) + cos(t * 10)` and move the slider there.
     * Translating the equations into the 3D space and reproducing the animation is the main objective.
     * In real life, even more in the DRL **Simulator** many times we need to extrapolate and find custom Math solutions all the time.
   * ## Color Pattern
