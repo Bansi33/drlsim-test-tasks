@@ -6,7 +6,7 @@ This repository contains an empty boilerplate Unity3D Project for aptitude testi
 This assignment aims to validate elementary C# / Coding / Math / Unity3D knowledge in form of a small scale project.
 
 ## Test Format
- * Using the functional sample[embedded executable](https://github.com/thedroneracingleague/drlsim-test-tasks/raw/main/resources/build/drlsim-test-task-1-0-0.zip), work to create a product as close to this as possible
+ * Using the functional sample [embedded executable](https://github.com/thedroneracingleague/drlsim-test-tasks/raw/main/resources/build/drlsim-test-task-1-0-0.zip), work to create a product as close to this as possible
  * Please start by creating a `fork` of this repository
  * Please do not use any external packages besides Unity's UI packages (sliders, buttons, layouts,...)
  * The expectation is that all work is done from scratch
