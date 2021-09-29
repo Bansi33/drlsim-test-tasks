@@ -28,9 +28,7 @@ unity*/*.sln
 unity*/Library/
 unity*/Logs/
 unity*/MemoryCaptures/
-unity*/Deploy/*.bytes
-unity*/Deploy/*.webm
-unity*/Deploy/*.mp4
+unity*/Deploy/
 unity*/Temp/
 unity*/obj/
 unity/MemoryCapture/
