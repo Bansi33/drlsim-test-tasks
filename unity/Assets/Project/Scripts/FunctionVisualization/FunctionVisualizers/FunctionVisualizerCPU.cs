@@ -1,44 +1,46 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace DRL
 {
-    public static class FunctionVisualizerCPU
+    /// <summary>
+    /// Abstract class that unifies functionalities for the function visualizers that calculate
+    /// discrete positions on the CPU and propagate the data to the GPU for rendering.
+    /// </summary>
+    public abstract class FunctionVisualizerCPU : FunctionVisualizerBase
     {
-        private const int MAX_INSTANCES_PER_BATCH = 1023;
         private const float MAX_ANGLE = 360f;
 
-        public static void VisualizeData(FunctionVisualizationData functionVisualizationData, Mesh mesh, 
-            Material material, float startAngleOffset)
+        [Header("References: ")]
+        [SerializeField] protected Material _material = null;
+
+        /// <summary>
+        /// Function draws the provided <paramref name="mesh"/> on the world positions
+        /// specified by the <paramref name="transformationMatrices"/>.
+        /// </summary>
+        /// <param name="mesh">Reference to the <see cref="Mesh"/> asset that will be instantiated
+        /// on the specified world positions.</param>
+        /// <param name="transformationMatrices">Collection of <see cref="Matrix4x4"/> structures
+        /// that contain world positions, rotations and sizes of the meshes that will be instantiated.</param>
+        protected abstract void DrawMeshes(Mesh mesh, Matrix4x4[] transformationMatrices);
+
+        /// <inheritdoc/>
+        protected override void VisualizeFunction(FunctionVisualizationData functionVisualizationData, Mesh mesh)
         {
-            
-            int numberOfInstancesToDraw = Mathf.RoundToInt(functionVisualizationData.Instances.Value);
             Matrix4x4[] matrices = CalculateFunctionTransformationMatrices(
-                numberOfMatrices: numberOfInstancesToDraw,
-                startAngleOffset: startAngleOffset,
+                numberOfMatrices: _numberOfInstancesToDraw,
+                startAngleOffset: _startOffsetAngle,
                 constA: functionVisualizationData.ConstA.Value,
                 constB: functionVisualizationData.ConstB.Value,
                 radius: functionVisualizationData.Radius.Value,
                 size: functionVisualizationData.Size.Value);
 
-            switch (functionVisualizationData.Mode)
-            {
-                case FunctionVisualizationType.DrawMesh:
-                    DrawMeshesDirectly(mesh, material, matrices);
-                    break;
-                case FunctionVisualizationType.DrawMeshInstanced:
-                    DrawMeshesInBatches(mesh, material, matrices);
-                    break;
-                default:
-                    Debug.LogError($"No visualization function implemented for the provided {functionVisualizationData.Mode}.");
-                    break;
-            }
+            DrawMeshes(mesh, matrices);
         }
 
-        private static Matrix4x4[] CalculateFunctionTransformationMatrices(int numberOfMatrices, float startAngleOffset, 
+        private Matrix4x4[] CalculateFunctionTransformationMatrices(int numberOfMatrices, float startAngleOffset,
             float constA, float constB, float radius, float size)
         {
-            if(numberOfMatrices == 0)
+            if (numberOfMatrices == 0)
             {
                 return new Matrix4x4[0];
             }
@@ -53,50 +55,29 @@ namespace DRL
             for (int i = 0; i < numberOfMatrices; i++)
             {
                 float angleInRadians = Mathf.Deg2Rad * (angleDelta * i + startAngleOffset);
-                Vector2 polarCoordinates = CalculatePolarCoordinates(angleInRadians, constA, constB);
-                Vector3 cartesianCoordinates = ConvertPolarCoordinatesToCartesian(polarCoordinates);
-
-                positionMatrices[i] = Matrix4x4.TRS(
-                    cartesianCoordinates * radius,
-                    Quaternion.identity,
-                    Vector3.one * size);
+                positionMatrices[i] = GetTransformationMatrix(angleInRadians, constA, constB, size, radius);
             }
 
             return positionMatrices;
         }
 
-        private static void DrawMeshesDirectly(Mesh mesh, Material material, Matrix4x4[] matrices)
+        private Matrix4x4 GetTransformationMatrix(float angleInRadians, float constA, float constB, float size, float radius)
         {
-            int numberOfInstancesToDraw = matrices.Length;
-            for (int i = 0; i < numberOfInstancesToDraw; i++)
-            {
-                Graphics.DrawMesh(mesh, matrices[i], material, 0);
-            }
+            Vector2 polarCoordinates = CalculatePolarCoordinates(angleInRadians, constA, constB);
+            Vector3 cartesianCoordinates = ConvertPolarCoordinatesToCartesian(polarCoordinates);
+
+            return Matrix4x4.TRS(
+                   pos: cartesianCoordinates * radius,
+                   q: Quaternion.identity,
+                   s: Vector3.one * size);
         }
 
-        private static void DrawMeshesInBatches(Mesh mesh, Material material, Matrix4x4[] matrices)
-        {
-            int numberOfInstancesToDraw = matrices.Length;
-            int numberOfDrawnInstances = 0;
-
-            while (numberOfDrawnInstances < numberOfInstancesToDraw)
-            {
-                int batchSize = Mathf.Min(numberOfInstancesToDraw - numberOfDrawnInstances, MAX_INSTANCES_PER_BATCH);
-                
-                Matrix4x4[] batchMatrices = new Matrix4x4[batchSize];
-                Array.Copy(matrices, numberOfDrawnInstances, batchMatrices, 0, batchSize);
-                Graphics.DrawMeshInstanced(mesh, 0, material, batchMatrices);
-
-                numberOfDrawnInstances += batchSize;
-            }
-        }
-
-        private static Vector2 CalculatePolarCoordinates(float angleInRadians, float constA, float constB)
+        private Vector2 CalculatePolarCoordinates(float angleInRadians, float constA, float constB)
         {
             return new Vector2(Mathf.Sin(angleInRadians * constA) + Mathf.Cos(angleInRadians * constB), angleInRadians);
         }
 
-        private static Vector3 ConvertPolarCoordinatesToCartesian(Vector2 polarCoordinates)
+        private Vector3 ConvertPolarCoordinatesToCartesian(Vector2 polarCoordinates)
         {
             return new Vector3(polarCoordinates.x * Mathf.Cos(polarCoordinates.y), 0, polarCoordinates.x * Mathf.Sin(polarCoordinates.y));
         }

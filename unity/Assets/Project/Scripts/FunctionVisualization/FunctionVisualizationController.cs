@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 namespace DRL
@@ -6,7 +5,7 @@ namespace DRL
     public class FunctionVisualizationController : MonoBehaviour
     {
         [Header("References: ")]
-        [SerializeField] private FunctionVisualizer _functionVisualizer = null;
+        [SerializeField] private FunctionVisualization _functionVisualizer = null;
         [SerializeField] private ControlsView _controlsView = null;
 
         [Header("Options: ")]

@@ -1,0 +1,64 @@
+#pragma kernel CSMain
+
+struct MeshInstanceData
+{
+    // Tightly packed data into one vector, with parameters indicating:
+    // x, y --> 2D position (3. coordinate is 0)
+    // z --> size
+    // w --> color ID (0 = red, 1 = green, 2 = blue)
+    float4 data;
+};
+
+RWStructuredBuffer<MeshInstanceData> _Data;
+
+// Tightly packed data, representing:
+// x --> start offset angle
+// y --> constA
+// z --> constB
+// w --> radius
+float4 _PositionsGenerationData;
+
+float _Size;
+int _TotalInstancesCount;
+
+float2 CalculatePolarCoordinates(float angleInRadians, float constA, float constB)
+{
+    return float2(sin(angleInRadians * constA) + cos(angleInRadians * constB), angleInRadians);
+}
+
+float3 ConvertPolarCoordinatesToCartesian(float2 polarCoordinates)
+{
+    return float3(
+        polarCoordinates.x * cos(polarCoordinates.y),
+        0,
+        polarCoordinates.x * sin(polarCoordinates.y)
+    );    
+}
+
+[numthreads(64,1,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    if(id.x >= (uint)_TotalInstancesCount){
+        return;
+    }
+
+    // Unpacking data.
+    float startAngleOffset = _PositionsGenerationData.x;
+    float constA = _PositionsGenerationData.y;
+    float constB = _PositionsGenerationData.z;
+    float radius = _PositionsGenerationData.w;
+
+    float angleDelta = 360.0 / (float)_TotalInstancesCount;
+    if (fmod(constA, 2) != 0 && fmod(constB, 2) != 0)
+    {
+        angleDelta *= 0.5;
+    }
+
+    // 0.0174533 = Degrees to Radians multiplier.
+    float angleInRadians = 0.0174533 * (angleDelta * float(id.x) + startAngleOffset);
+    float2 polarCoordinates = CalculatePolarCoordinates(angleInRadians, constA, constB);
+    float3 cartesianCoordinates = ConvertPolarCoordinatesToCartesian(polarCoordinates);
+
+    float4 data = float4(cartesianCoordinates.xz * radius, _Size, 0);
+    _Data[id.x].data = data;
+}
