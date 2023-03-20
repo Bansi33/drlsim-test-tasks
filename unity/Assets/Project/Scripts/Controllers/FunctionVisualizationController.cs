@@ -11,7 +11,7 @@ namespace DRL
         [Header("Options: ")]
         [SerializeField] private FunctionVisualizationData _functionVisualizationData = null;
 
-        private void Start()
+        private void Awake()
         {
             DisplayConstrainedValue(_functionVisualizationData.Instances, nameof(_functionVisualizationData.Instances));
             DisplayConstrainedValue(_functionVisualizationData.Speed, nameof(_functionVisualizationData.Speed));
@@ -22,10 +22,6 @@ namespace DRL
 
             _controlsView.DisplayLabeledInputField(nameof(_functionVisualizationData.Pattern), _functionVisualizationData.Pattern,
                 (value) => { _functionVisualizationData.Pattern = value; });
-
-            _controlsView.DisplayLabeledEnum(nameof(_functionVisualizationData.Mode), (int)_functionVisualizationData.Mode,
-                typeof(FunctionVisualizationType),
-                (value) => { _functionVisualizationData.Mode = (FunctionVisualizationType)value; });
         }
 
         private void Update()

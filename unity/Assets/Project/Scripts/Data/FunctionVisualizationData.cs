@@ -12,7 +12,6 @@ namespace DRL
         public ConstrainedValue ConstA;
         public ConstrainedValue ConstB;
         public string Pattern;
-        public FunctionVisualizationType Mode;
 
         public FunctionVisualizationData()
         {
@@ -23,7 +22,6 @@ namespace DRL
             ConstA = new ConstrainedValue();
             ConstB = new ConstrainedValue();
             Pattern = string.Empty;
-            Mode = FunctionVisualizationType.DrawMesh;
         }
 
 #if UNITY_EDITOR

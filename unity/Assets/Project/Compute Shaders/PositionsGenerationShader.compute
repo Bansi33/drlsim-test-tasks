@@ -5,8 +5,11 @@ struct MeshInstanceData
     // Tightly packed data into one vector, with parameters indicating:
     // x, y --> 2D position (3. coordinate is 0)
     // z --> size
-    // w --> color ID (0 = red, 1 = green, 2 = blue)
+    // w --> currently unused.
     float4 data;
+
+    // Color of the instance.
+    float4 color;
 };
 
 RWStructuredBuffer<MeshInstanceData> _Data;
@@ -18,8 +21,14 @@ RWStructuredBuffer<MeshInstanceData> _Data;
 // w --> radius
 float4 _PositionsGenerationData;
 
-float _Size;
-int _TotalInstancesCount;
+// Tightly packed data into vector, each element meaning:
+// x --> Size of the mesh.
+// y --> Total number of instances for which the positions need to be calculated.
+// z --> Total length of the color pattern.
+float3 _RepresentationData;
+
+// An array of integers, representing color pattern that needs to be applied to the instances.
+float4 _ColorPatternData[256];
 
 float2 CalculatePolarCoordinates(float angleInRadians, float constA, float constB)
 {
@@ -35,10 +44,12 @@ float3 ConvertPolarCoordinatesToCartesian(float2 polarCoordinates)
     );    
 }
 
-[numthreads(64,1,1)]
+[numthreads(64, 1, 1)]
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
-    if(id.x >= (uint)_TotalInstancesCount){
+    int totalInstancesCount = _RepresentationData.y;
+    int threadID = int(id.x);// + 64 * int(id.y) + 4096 * int(id.z);
+    if(threadID >= totalInstancesCount){
         return;
     }
 
@@ -48,17 +59,20 @@ void CSMain (uint3 id : SV_DispatchThreadID)
     float constB = _PositionsGenerationData.z;
     float radius = _PositionsGenerationData.w;
 
-    float angleDelta = 360.0 / (float)_TotalInstancesCount;
+    float angleDelta = 360.0 / float(totalInstancesCount);
     if (fmod(constA, 2) != 0 && fmod(constB, 2) != 0)
     {
         angleDelta *= 0.5;
     }
 
-    // 0.0174533 = Degrees to Radians multiplier.
-    float angleInRadians = 0.0174533 * (angleDelta * float(id.x) + startAngleOffset);
+    float angleInRadians = radians(angleDelta * threadID + startAngleOffset);
     float2 polarCoordinates = CalculatePolarCoordinates(angleInRadians, constA, constB);
     float3 cartesianCoordinates = ConvertPolarCoordinatesToCartesian(polarCoordinates);
 
-    float4 data = float4(cartesianCoordinates.xz * radius, _Size, 0);
-    _Data[id.x].data = data;
+    float4 color = _ColorPatternData[fmod(threadID, 256)];
+    float size = _RepresentationData.x;
+    float4 data = float4(cartesianCoordinates.xz * radius, size, color.a);
+
+    _Data[threadID].data = data;
+    _Data[threadID].color = color;
 }

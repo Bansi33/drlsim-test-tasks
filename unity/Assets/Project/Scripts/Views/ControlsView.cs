@@ -9,7 +9,6 @@ namespace DRL
         [SerializeField] private Transform _controlsHolderTransform = null;
         [SerializeField] private GameObject _labeledSliderPrefab = null;
         [SerializeField] private GameObject _labeledInputFieldPrefab = null;
-        [SerializeField] private GameObject _labeledDropdownPrefab = null;
 
         private void Awake()
         {
@@ -26,11 +25,6 @@ namespace DRL
             if (_labeledInputFieldPrefab == null)
             {
                 Debug.LogError($"Labeled input field prefab reference hasn't been assigned!", gameObject);
-            }
-
-            if (_labeledDropdownPrefab == null)
-            {
-                Debug.LogError($"Labeled drop down prefab reference hasn't been assigned!", gameObject);
             }
         }
 
@@ -76,28 +70,6 @@ namespace DRL
             labeledInputField.SetLabel(label);
             labeledInputField.InitializeInputField(initialValue);
             labeledInputField.OnInputValueChanged += onValueUpdated;
-        }
-
-        public void DisplayLabeledEnum(string label, int initialValue, Type enumerationType, Action<int> onValueUpdated)
-        {
-            if (_controlsHolderTransform == null || _labeledDropdownPrefab == null)
-            {
-                return;
-            }
-
-            GameObject labeledDropdownHolder = Instantiate(_labeledDropdownPrefab, _controlsHolderTransform);
-            LabeledDropdown labeledDropdown = labeledDropdownHolder.GetComponent<LabeledDropdown>();
-
-            if (labeledDropdown == null)
-            {
-                Debug.LogError($"Labeled drop down prefab needs to have a {nameof(LabeledDropdown)} component assigned!", gameObject);
-                Destroy(labeledDropdownHolder);
-                return;
-            }
-
-            labeledDropdown.SetLabel(label);
-            labeledDropdown.InitializeDropdown(initialValue, enumerationType);
-            labeledDropdown.OnDropdownValueChanged += onValueUpdated;
         }
     }
 }
