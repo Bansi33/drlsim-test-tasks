@@ -34,6 +34,9 @@ Shader "DRL/CustomLitSurfaceShader"
             // z --> size
             // w --> color ID (0 = red, 1 = green, 2 = blue)
             float4 data;
+
+            // Color of the instance.
+            float4 color;
         };
 
 #ifdef UNITY_PROCEDURAL_INSTANCING_ENABLED
@@ -44,7 +47,8 @@ Shader "DRL/CustomLitSurfaceShader"
         {
 #ifdef UNITY_PROCEDURAL_INSTANCING_ENABLED
             float4 vertexInstanceData = _Data[unity_InstanceID].data;
-            float size = vertexInstanceData.z;
+            float shouldBeVisibleMultiplier = _Data[unity_InstanceID].color.a;
+            float size = vertexInstanceData.z * 0.25 * shouldBeVisibleMultiplier;
             float3 worldPosition = float3(vertexInstanceData.x, 0, vertexInstanceData.y);
 
             unity_ObjectToWorld._11_21_31_41 = float4(size, 0, 0, 0);
@@ -61,32 +65,14 @@ Shader "DRL/CustomLitSurfaceShader"
         void surf (Input IN, inout SurfaceOutputStandard o)
         {
 #ifdef UNITY_PROCEDURAL_INSTANCING_ENABLED
-            float4 fragmentInstanceData = _Data[unity_InstanceID].data;
+            float4 fragmentInstanceColor = _Data[unity_InstanceID].color;
 #else
-            float4 fragmentInstanceData = 0;
+            float4 fragmentInstanceColor = 0;
 #endif
-
-            float colorId = fragmentInstanceData.w;
-            fixed4 finalColor = fixed4(0,0,0,1);
-
-            UNITY_BRANCH
-            if(colorId == 0){
-                // Red.
-                finalColor.r = 1;
-            }
-            else if(colorId == 1){
-                // Green.
-                finalColor.g = 1;
-            }
-            else{
-                // Blue.
-                finalColor.b = 1;
-            }
-
-            o.Albedo = finalColor.rgb;
+            o.Albedo = fragmentInstanceColor.rgb;
             o.Metallic = _Metallic;
             o.Smoothness = _Glossiness;
-            o.Alpha = finalColor.a;
+            o.Alpha = fragmentInstanceColor.a;
         }
         ENDCG
     }

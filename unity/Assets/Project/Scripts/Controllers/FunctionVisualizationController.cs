@@ -22,10 +22,6 @@ namespace DRL
 
             _controlsView.DisplayLabeledInputField(nameof(_functionVisualizationData.Pattern), _functionVisualizationData.Pattern,
                 (value) => { _functionVisualizationData.Pattern = value; });
-
-            _controlsView.DisplayLabeledEnum(nameof(_functionVisualizationData.Mode), (int)_functionVisualizationData.Mode,
-                typeof(FunctionVisualizationType),
-                (value) => { _functionVisualizationData.Mode = (FunctionVisualizationType)value; });
         }
 
         private void Update()
