@@ -1,3 +1,4 @@
+// Custom Lit shader that supports indirect instancing.
 Shader "DRL/CustomLitSurfaceShader"
 {
     Properties

@@ -4,14 +4,25 @@ using UnityEngine.UI;
 
 namespace DRL
 {
+    /// <summary>
+    /// Class that displays the value of the slider as a text. Must be assigned to the 
+    /// object containing the <see cref="TextMeshProUGUI"/> component.
+    /// </summary>
     [RequireComponent(typeof(TextMeshProUGUI))]
     public class SliderValueDisplay : MonoBehaviour
     {
+        private readonly string WHOLE_NUMBERS_TEXT_FORMAT = "0.";
+        private readonly string DECIMAL_NUMBERS_TEXT_FORMAT = "0.0";
+
         [Header("References: ")]
         [SerializeField] private Slider _slider = null;
 
+        
         private TextMeshProUGUI _valueText = null;
-
+        /// <summary>
+        /// Reference to the <see cref="TextMeshProUGUI"/> component that is displaying
+        /// the value of the <see cref="_slider"/> as a text.
+        /// </summary>
         private TextMeshProUGUI ValueText
         {
             get
@@ -45,9 +56,15 @@ namespace DRL
             }
         }
 
+        /// <summary>
+        /// Function updates the textual value based on the provided <paramref name="sliderValue"/>.
+        /// </summary>
+        /// <param name="sliderValue">Current value of the slider that needs to be displayed as a text.</param>
         private void UpdateText(float sliderValue)
         {
-            ValueText.text = _slider.wholeNumbers ? sliderValue.ToString("0.") : sliderValue.ToString("0.0");
+            ValueText.text = _slider.wholeNumbers ? 
+                sliderValue.ToString(WHOLE_NUMBERS_TEXT_FORMAT) : 
+                sliderValue.ToString(DECIMAL_NUMBERS_TEXT_FORMAT);
         }
     }
 }
