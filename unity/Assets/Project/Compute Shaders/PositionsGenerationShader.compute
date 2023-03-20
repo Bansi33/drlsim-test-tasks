@@ -1,9 +1,11 @@
 #pragma kernel CSMain
 
+// Structure containing data required for correctly instancing one
+// mesh on the function.
 struct MeshInstanceData
 {
     // Tightly packed data into one vector, with parameters indicating:
-    // x, y --> 2D position (3. coordinate is 0)
+    // x, y --> 2D position on the X-Z plane (3. coordinate is 0)
     // z --> size
     // w --> currently unused.
     float4 data;
@@ -30,11 +32,14 @@ float3 _RepresentationData;
 // An array of integers, representing color pattern that needs to be applied to the instances.
 float4 _ColorPatternData[256];
 
+// Function calculates polar coordinates (r, angle) via the formula: 
+// r = Sin(angle * A) + Cos(angle * B)
 float2 CalculatePolarCoordinates(float angleInRadians, float constA, float constB)
 {
     return float2(sin(angleInRadians * constA) + cos(angleInRadians * constB), angleInRadians);
 }
 
+// Function converts the polar coordinates to the world position in the X-Z plane.
 float3 ConvertPolarCoordinatesToCartesian(float2 polarCoordinates)
 {
     return float3(
@@ -44,11 +49,15 @@ float3 ConvertPolarCoordinatesToCartesian(float2 polarCoordinates)
     );    
 }
 
+// Main kernel function that calculates the world positions of the instances along the function
+// r = Sin(angle * A) + Cos(angle * B). Additionally, it applies the user-provided color pattern
+// to the instances.
 [numthreads(64, 1, 1)]
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
+    // Only executing function for the visible instances.
     int totalInstancesCount = _RepresentationData.y;
-    int threadID = int(id.x);// + 64 * int(id.y) + 4096 * int(id.z);
+    int threadID = int(id.x);
     if(threadID >= totalInstancesCount){
         return;
     }
@@ -59,20 +68,30 @@ void CSMain (uint3 id : SV_DispatchThreadID)
     float constB = _PositionsGenerationData.z;
     float radius = _PositionsGenerationData.w;
 
+    // Wrap function correctly so that the instances are correctly spread out across the whole
+    // body of the function.
     float angleDelta = 360.0 / float(totalInstancesCount);
     if (fmod(constA, 2) != 0 && fmod(constB, 2) != 0)
     {
         angleDelta *= 0.5;
     }
 
+    // Calculate the world position of the instance based on the ID.
     float angleInRadians = radians(angleDelta * threadID + startAngleOffset);
     float2 polarCoordinates = CalculatePolarCoordinates(angleInRadians, constA, constB);
     float3 cartesianCoordinates = ConvertPolarCoordinatesToCartesian(polarCoordinates);
 
+    // Calculate the color based on the user-provided color pattern.
     float4 color = _ColorPatternData[fmod(threadID, 256)];
+
+    // Get the size of the instance that will be multiplied with the vertex local position.
     float size = _RepresentationData.x;
+
+    // Pack the position, size and visibility of the instance to a tightly packed data vector.
+    // In case the instance should be transparent, set the size to 0 so that it wouldn't be rendered at all.
     float4 data = float4(cartesianCoordinates.xz * radius, size, color.a);
 
+    // Update the data array with the newly calculated values.
     _Data[threadID].data = data;
     _Data[threadID].color = color;
 }
