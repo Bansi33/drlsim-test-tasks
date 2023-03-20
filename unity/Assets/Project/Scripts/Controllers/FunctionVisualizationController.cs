@@ -11,7 +11,7 @@ namespace DRL
         [Header("Options: ")]
         [SerializeField] private FunctionVisualizationData _functionVisualizationData = null;
 
-        private void Start()
+        private void Awake()
         {
             DisplayConstrainedValue(_functionVisualizationData.Instances, nameof(_functionVisualizationData.Instances));
             DisplayConstrainedValue(_functionVisualizationData.Speed, nameof(_functionVisualizationData.Speed));

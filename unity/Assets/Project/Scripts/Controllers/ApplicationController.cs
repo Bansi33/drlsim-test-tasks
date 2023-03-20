@@ -27,6 +27,9 @@ namespace DRL
         {
             _targetFrameRate.Value = targetFPS;
             Application.targetFrameRate = Mathf.RoundToInt(_targetFrameRate.Value);
+
+            // Disable V-sync if the desired FPS is larger than the screen refresh rate.
+            QualitySettings.vSyncCount = _targetFrameRate.Value > Screen.currentResolution.refreshRate ? 0 : 1;
         }
     }
 }
